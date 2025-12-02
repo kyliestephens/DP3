@@ -4,17 +4,13 @@ import numpy as np
 import logging
 from prefect import flow, task, get_run_logger  
 
-# -----------------------------------------------------
-# Setup Logging
-# -----------------------------------------------------
+#Logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 
-# -----------------------------------------------------
-# Load Raw Data
-# -----------------------------------------------------
+
 @task
 def load_raw(db_path):
     logging.info(f"Loading raw flight data from {db_path}...")
@@ -24,9 +20,7 @@ def load_raw(db_path):
     logging.info(f"Loaded {len(df):,} rows and {len(df.columns)} columns.")
     return df
 
-# -----------------------------------------------------
-# Basic Dataset Description
-# -----------------------------------------------------
+#Basic Dataset Description
 @task
 def describe_data(df):
     logger = get_run_logger()
@@ -34,13 +28,9 @@ def describe_data(df):
     logger.info(f"DataFrame loaded with {len(df)} rows and {len(df.columns)} columns.")
     logger.info(f"Columns: {list(df.columns)}")
 
-    # Generate full statistical description
+    #stat description
     desc = df.describe(include="all")
-
-    # 👇 ADD THIS LINE HERE
     print(desc)
-
-    # Also log a sample (optional)
     logger.info(f"Head of dataset:\n{df.head()}")
 
     return desc
@@ -49,24 +39,22 @@ def describe_data(df):
 def summarize_data(df):
     logging.info("Summarizing dataset...")
 
-    # Column list
+    #Column list
     logging.info(f"Columns ({len(df.columns)}): {list(df.columns)}")
 
-    # Missing values
+    #Missing values
     missing = df.isna().sum()
     logging.info("Missing values per column:")
     for col, val in missing.items():
         logging.info(f"  {col}: {val}")
 
-    # Basic stats for numeric columns
+    #Basic stats for numeric columns
     logging.info("Basic numeric statistics:")
     logging.info(df.describe(include='all').to_string())
 
-    return df  # pass df unchanged
+    return df 
 
-# -----------------------------------------------------
-# Cleaning: Remove impossible coordinates + standardize callsign
-# -----------------------------------------------------
+#Cleaning
 @task
 def clean_data(df):
     logging.info("Cleaning data: dropping invalid coordinates & standardizing callsigns...")
@@ -78,9 +66,7 @@ def clean_data(df):
     logging.info(f"Removed {before - len(df):,} rows with invalid coordinates.")
     return df
 
-# -----------------------------------------------------
-# Temporal Features
-# -----------------------------------------------------
+#Temporal Features
 @task
 def add_temporal_features(df):
     logging.info("Adding temporal features (timestamp, hour, day_of_week)...")
@@ -91,9 +77,7 @@ def add_temporal_features(df):
 
     return df
 
-# -----------------------------------------------------
-# Feature Engineering
-# -----------------------------------------------------
+#Feature Engineering
 @task
 def add_feature_engineering(df):
     logging.info("Adding feature engineering (altitude_change, speed_change)...")
@@ -105,9 +89,6 @@ def add_feature_engineering(df):
 
     return df
 
-# -----------------------------------------------------
-# Save transformed dataset
-# -----------------------------------------------------
 @task
 def save_transformed(df, out_path):
     logging.info(f"Saving transformed dataset to {out_path}...")
@@ -116,15 +97,13 @@ def save_transformed(df, out_path):
     conn.close()
     logging.info("Saved transformed dataset successfully.")
 
-# -----------------------------------------------------
-# Prefect Flow
-# -----------------------------------------------------
+#Prefect Flow
 @flow(name="Flight Data Transformation Flow")
 def transform_flow():
 
     df = load_raw("../Extract/flights.duckdb")
 
-    describe_data(df)   # <-- RUN THIS TASK!
+    describe_data(df) 
 
     df = summarize_data(df)
 

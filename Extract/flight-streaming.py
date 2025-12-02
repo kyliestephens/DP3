@@ -8,31 +8,31 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from quixstreams import Application
 import time
 
-# ---------------------------------------------------
+
 # Configuration
-# ---------------------------------------------------
+
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", "localhost:19092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "flight_states")
 
 BBOX = {
-    "lamin": 25.0,   # Florida
-    "lomin": -90.0,  # Louisiana-ish
-    "lamax": 47.5,   # Maine
+    "lamin": 25.0,   #Florida
+    "lomin": -90.0,  #Louisiana-ish
+    "lamax": 47.5,   #Maine
     "lomax": -66.0   # Atlantic
 }
 
-# Polling interval (ms) - increase to avoid OpenSky rate limits
-POLL_INTERVAL_MS = int(os.getenv("POLL_INTERVAL_MS", 60000))  # 60 seconds
+#Polling interval (ms) - increase to avoid OpenSky rate limits
+POLL_INTERVAL_MS = int(os.getenv("POLL_INTERVAL_MS", 60000))  #60 seconds
 
-# OpenSky API credentials (optional)
-OPENSKY_USERNAME = os.getenv("OPENSKY_USER")  # None if not set
+#OpenSky API credentials
+OPENSKY_USERNAME = os.getenv("OPENSKY_USER") 
 OPENSKY_PASSWORD = os.getenv("OPENSKY_PASS")
 
 OPENSKY_URL = "https://opensky-network.org/api/states/all"
 
-# ---------------------------------------------------
+
 # Logging setup
-# ---------------------------------------------------
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -40,24 +40,19 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------
+
 # OpenSky flight columns
-# ---------------------------------------------------
+
 COLUMNS = [
     "icao24", "callsign", "origin_country", "time_position", "last_contact",
     "longitude", "latitude", "baro_altitude", "on_ground", "velocity",
     "heading", "vertical_rate", "sensors", "geo_altitude", "squawk", "spi", "position_source"
 ]
 
-# ---------------------------------------------------
-# Kafka / Quix Application
-# ---------------------------------------------------
+
 app = Application(broker_address=KAFKA_BROKER, consumer_group="opensky-producer")
 producer = app.get_producer()
 
-# ---------------------------------------------------
-# Fetch, format, and send flights
-# ---------------------------------------------------
 def fetch_flights():
     try:
         # Only use auth if both username and password exist
@@ -94,9 +89,7 @@ def fetch_flights():
     except Exception as e:
         logger.error(f"Error fetching/sending flight data: {e}")
 
-# ---------------------------------------------------
-# Main loop
-# ---------------------------------------------------
+
 if __name__ == "__main__":
     logger.info("Starting OpenSky → Kafka producer")
     logger.info(f"Kafka broker: {KAFKA_BROKER}")

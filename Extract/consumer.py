@@ -3,15 +3,15 @@ import json
 from quixstreams import Application
 from time import sleep
 
-# ---------------------------------------
+
 # Kafka Config
-# ---------------------------------------
+
 KAFKA_BROKER = "localhost:19092"
 KAFKA_TOPIC = "flight_states"
 
-# ---------------------------------------
+
 # DuckDB Setup
-# ---------------------------------------
+
 conn = duckdb.connect("flights.duckdb")
 
 conn.execute("""
@@ -36,25 +36,25 @@ CREATE TABLE IF NOT EXISTS flight_states (
 )
 """)
 
-# ---------------------------------------
+
 # Kafka Consumer
-# ---------------------------------------
+
 app = Application(broker_address=KAFKA_BROKER, consumer_group="duckdb-consumer")
 consumer = app.get_consumer()
 consumer.subscribe([KAFKA_TOPIC])
 
 print("Listening for Kafka messages...")
 
-# ---------------------------------------
+
 # Infinite consume loop
-# ---------------------------------------
+
 while True:
     for msg in consumer.consume():
         if msg is None:
             continue
 
         try:
-            flight_json = msg.value()  # get the message payload
+            flight_json = msg.value()  #get the message payload
             flight = json.loads(flight_json)
 
             conn.execute("""
@@ -85,5 +85,5 @@ while True:
         except Exception as e:
             print("Error inserting flight:", e)
 
-    # Prevent tight loop when there are no new messages
-    sleep(.1)
+    #Prevent tight loop when there are no new messages
+    sleep(.1) #.1 so it goes fast
